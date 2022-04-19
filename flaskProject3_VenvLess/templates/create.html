@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Crée une nouvelle ligne {% endblock %}</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="nom">nom</label>
+        <input type="text" name="nom"
+               placeholder="nom du criminel" class="form-control"
+               value="{{ request.form['nom'] }}"></input>
+    </div>
+
+    <div class="form-group">
+        <label for="meurtre">meurtre</label>
+        <textarea name="meurtre" placeholder="Nombre de meurtre"
+                  class="form-control">{{ request.form['meurtre'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="pays">pays</label>
+        <textarea name="pays" placeholder="pays d'origine"
+                  class="form-control">{{ request.form['pays'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Valider</button>
+    </div>
+</form>
+{% endblock %}

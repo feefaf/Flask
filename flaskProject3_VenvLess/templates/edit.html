@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{% block title %} Editer "{{ post['nom'] }}" {% endblock %}</h1>
+
+<form method="post">
+    <div class="form-group">
+        <label for="nom">nom</label>
+        <input type="text" name="nom" placeholder="Nom du criminel"
+               class="form-control"
+               value="{{ request.form['nom'] or post['nom'] }}">
+        </input>
+    </div>
+
+    <div class="form-group">
+        <label for="meurtre">meurtre</label>
+        <textarea name="meurtre" placeholder="Nombre de meurtre"
+                  class="form-control">{{ request.form['meurtre'] or post['meurtre'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="pays">pays</label>
+        <textarea name="pays" placeholder="Pays d'origine"
+                  class="form-control">{{ request.form['pays'] or post['pays'] }}</textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Valider</button>
+    </div>
+</form>
+<hr>
+    <form action="{{ url_for('delete', id=post['id']) }}" method="POST">
+    <input type="submit" value="Supprimer la ligne"
+            class="btn btn-danger btn-sm"
+            onclick="return confirm('veut tu vraiment supprimer cette ligne?')">
+</form>
+{% endblock %}

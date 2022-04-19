@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{% block title %} {{ post['nom'] }} {% endblock %}</h2>
+    <span class="badge badge-primary">{{ post['created'] }}</span>
+    <h2>nombre de meurtre </h2>
+    <h1>{{ post['meurtre'] }}</h1>
+    <h2>Pays d'origine du tueur </h2>
+    <h1>{{ post['pays'] }}</h1>
+{% endblock %}
