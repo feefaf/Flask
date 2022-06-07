@@ -54,8 +54,6 @@ def fileKeys(file):
     return np.array(datasets[file].data_vars)
 
 
-
-
 #np.array(clovis_ds.data_vars)
 
 # Innitiating containero.js
@@ -177,9 +175,9 @@ def Images(file, tempMean, version, res):
     sumnumpyUsatOnly = np.zeros((len(xRes), len(yRes)))
     sumnumpyUsatUmis = np.zeros((len(xRes), len(yRes)))
     # std sumnumpys section
-    sumStdUsatUmist = np.zeros((len(xRes), len(yRes)))
-    sumStdUsatOnly = np.zeros((len(xRes), len(yRes)))
-    sumStdUsatUmis = np.zeros((len(xRes), len(yRes)))
+    sumVarUsatUmist = np.zeros((len(xRes), len(yRes)))
+    sumVarUsatOnly = np.zeros((len(xRes), len(yRes)))
+    sumVarUsatUmis = np.zeros((len(xRes), len(yRes)))
 
     # transform all nan to 0 because any calcul that involve a nan create a nan (exemple 5+ nan = nan)
     # this is sad but necessary for the calculs (the nans will be set back later)
@@ -190,35 +188,33 @@ def Images(file, tempMean, version, res):
     # creation of the 2D frequency histogram that will help meaning the final values
     H, xedges, yedges = np.histogram2d(dfDiffUsatUmist['lon'], dfDiffUsatUmist['lat'], bins=(xedges, yedges))
     divider = np.where(H == 0, 1, H)
-    #Calculate the means in order to calculate the std
-    meanUsatUmist = np.mean(dfDiffUsatUmist['diffSSS'][((dfDiffUsatUmist['lon']> lon_floor ) & (dfDiffUsatUmist['lon']< lon_ceil)) & ((dfDiffUsatUmist['lat']> lat_floor) & (dfDiffUsatUmist['lat']< lat_ceil))])
-    meanUsatOnly = np.mean(dfDiffUsatOnly['diffSSS'][((dfDiffUsatOnly['lon']> lon_floor ) & (dfDiffUsatOnly['lon']< lon_ceil)) & ((dfDiffUsatOnly['lat']> lat_floor) & (dfDiffUsatOnly['lat']< lat_ceil))])
-    meanUsatUmis = np.mean(dfDiffUsatUmist['diffSSS'][((dfDiffUsatUmist['lon']> lon_floor ) & (dfDiffUsatUmist['lon']< lon_ceil)) & ((dfDiffUsatUmist['lat']> lat_floor) & (dfDiffUsatUmist['lat']< lat_ceil))])
-
     # fill sumnumpy with all the diffSSS values
     # all the diffSSS values located in a bin will be summed into the proper bin
     for i in range(len(digitized[0])):
         sumnumpyUsatUmist[digitized[0][i]][digitized[1][i]] += no_nan_diffSSS_Usat_Umist[i]
         sumnumpyUsatOnly[digitized[0][i]][digitized[1][i]] += no_nan_diffSSS_Usat_Only[i]
         sumnumpyUsatUmis[digitized[0][i]][digitized[1][i]] += no_nan_diffSSS_Usat_Umis[i]
-        # now calculating (x - xMean)² to calculate std later
-        sumStdUsatUmist[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Umist[i] - meanUsatUmist) ** 2
-        sumStdUsatOnly[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Only[i] - meanUsatOnly) ** 2
-        sumStdUsatUmis[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Umis[i] - meanUsatUmis) ** 2
+
     # Matrix division to mean the diffSSS values (if a bin contain the value of 2 diff SSS data, the value of this bin will be divided by 2
     # and that for all the bins
     dividedNumpyDsssUsatUmist = np.divide(sumnumpyUsatUmist, divider)
     dividedNumpyDsssUsatOnly = np.divide(sumnumpyUsatOnly, divider)
     dividedNumpyDsssUsatUmis = np.divide(sumnumpyUsatUmis, divider)
-    #Same thing for the stds
-    dividedStdUsatUmist = np.divide(sumStdUsatUmist, divider)
-    dividedStdUsatOnly = np.divide(sumStdUsatOnly, divider)
-    dividedStdUsatUmis = np.divide(sumStdUsatUmis, divider)
-    #transforming variance into std
-    dividedStdUsatUmist = np.sqrt(dividedStdUsatUmist)
-    dividedStdUsatOnly = np.sqrt(dividedStdUsatOnly)
-    dividedStdUsatUmis = np.sqrt(dividedStdUsatUmis)
 
+    # now calculating (x - xMean)² where xMean is the mean of the pixel
+    for i in range(len(digitized[0])):
+        sumVarUsatUmist[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Umist[i] - dividedNumpyDsssUsatUmist[digitized[0][i]][digitized[1][i]]) ** 2
+        sumVarUsatOnly[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Only[i] - dividedNumpyDsssUsatOnly[digitized[0][i]][digitized[1][i]]) ** 2
+        sumVarUsatUmis[digitized[0][i]][digitized[1][i]] += (no_nan_diffSSS_Usat_Umis[i] - dividedNumpyDsssUsatUmis[digitized[0][i]][digitized[1][i]]) ** 2
+
+    #matrix division but now to get the variance
+    dividedVarUsatUmist = np.divide(sumVarUsatUmist, divider)
+    dividedVarUsatOnly = np.divide(sumVarUsatOnly, divider)
+    dividedVarUsatUmis = np.divide(sumVarUsatUmis, divider)
+    #transforming variance into std
+    dividedStdUsatUmist = np.sqrt(dividedVarUsatUmist)
+    dividedStdUsatOnly = np.sqrt(dividedVarUsatOnly)
+    dividedStdUsatUmis = np.sqrt(dividedVarUsatUmis)
 
     # Setting back the nans (like i promised)
     dividedNumpyDsssUsatUmist[dividedNumpyDsssUsatUmist == 0] = np.nan
@@ -418,8 +414,41 @@ def Images(file, tempMean, version, res):
 
         return kdeCurves
 
-    AllDsssImages = mpg_ls(diffSSSUsatUmistImage + diffSSSUsatOnlyImage + diffSSSUsatUmisImage).cols(1)
-    AllStdImages = mpg_ls(stdSSSUsatUmistImage + stdSSSUsatOnlyImage + stdSSSUsatUmisImage).cols(1)
+    #Widget that allow us to play with the colobar limits
+    #js code to change colobar limit
+    jscode = """
+            color_mapper.low = cb_obj.value[0];
+            color_mapper.high = cb_obj.value[1];
+        """
+    #All widgets for mean diff SSS
+    widgetUsatUmist = pn.widgets.RangeSlider(start=np.min(griddedHVdSSS_UsatUmist['DiffSSS'][~np.isnan(griddedHVdSSS_UsatUmist['DiffSSS'])]),
+                                     end=np.max(griddedHVdSSS_UsatUmist['DiffSSS'][~np.isnan(griddedHVdSSS_UsatUmist['DiffSSS'])]))
+
+    linkUsatUmist = widgetUsatUmist.jslink(diffSSSUsatUmistImage, code={'value': jscode})
+
+    widgetUsatOnly = pn.widgets.RangeSlider(start=np.min(griddedHVdSSS_UsatOnly['DiffSSS'][~np.isnan(griddedHVdSSS_UsatOnly['DiffSSS'])]),
+                                     end=np.max(griddedHVdSSS_UsatOnly['DiffSSS'][~np.isnan(griddedHVdSSS_UsatOnly['DiffSSS'])]))
+    linkUsatOnly = widgetUsatOnly.jslink(diffSSSUsatOnlyImage, code={'value': jscode})
+
+    widgetUsatUmis = pn.widgets.RangeSlider(start=np.min(griddedHVdSSS_Usat_Umis['DiffSSS'][~np.isnan(griddedHVdSSS_Usat_Umis['DiffSSS'])]),
+                     end=np.max(griddedHVdSSS_Usat_Umis['DiffSSS'][~np.isnan(griddedHVdSSS_Usat_Umis['DiffSSS'])]))
+    linkUsatUmis = widgetUsatUmis.jslink(diffSSSUsatUmisImage, code={'value': jscode})
+
+    #Same but for StdSSS
+    widgetStdUsatUmist = pn.widgets.RangeSlider(start=np.min(griddedHVStdSSS_UsatUmist['StdSSS'][~np.isnan(griddedHVStdSSS_UsatUmist['StdSSS'])]),
+                                     end=np.max(griddedHVStdSSS_UsatUmist['StdSSS'][~np.isnan(griddedHVStdSSS_UsatUmist['StdSSS'])]))
+    linkStdUsatUmist = widgetStdUsatUmist.jslink(stdSSSUsatUmistImage, code={'value': jscode})
+
+    widgetStdUsatOnly = pn.widgets.RangeSlider(start=np.min(griddedHVStdSSS_UsatOnly['StdSSS'][~np.isnan(griddedHVStdSSS_UsatOnly['StdSSS'])]),
+                                     end=np.max(griddedHVStdSSS_UsatOnly['StdSSS'][~np.isnan(griddedHVStdSSS_UsatOnly['StdSSS'])]))
+    linkStdUsatOnly = widgetStdUsatOnly.jslink(stdSSSUsatOnlyImage, code={'value': jscode})
+
+    widgetStdUsatUmis = pn.widgets.RangeSlider(start=np.min(griddedHVStdSSS_Usat_Umis['StdSSS'][~np.isnan(griddedHVStdSSS_Usat_Umis['StdSSS'])]),
+                     end=np.max(griddedHVStdSSS_Usat_Umis['StdSSS'][~np.isnan(griddedHVStdSSS_Usat_Umis['StdSSS'])]))
+    linkStdUsatUmis = widgetStdUsatUmis.jslink(stdSSSUsatUmisImage, code={'value': jscode})
+
+    AllDsssImages = mpg_ls(pn.Column(widgetUsatUmist,diffSSSUsatUmistImage) + pn.Column(widgetUsatOnly, diffSSSUsatOnlyImage) + pn.Column(widgetUsatUmis, diffSSSUsatUmisImage))
+    AllStdImages = mpg_ls(pn.Column(widgetStdUsatUmist, stdSSSUsatUmistImage) + pn.Column(widgetStdUsatOnly, stdSSSUsatOnlyImage) + pn.Column(widgetStdUsatUmis,stdSSSUsatUmisImage))
     return pn.Column(selection_table2, pn.Row(pn.Tabs(('Mean', AllDsssImages),('Std', AllStdImages)), selection_table))
 
 
