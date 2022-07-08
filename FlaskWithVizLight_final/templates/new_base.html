@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>{% block title %} {% endblock %}</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <a class="navbar-brand" href="{{ url_for('hv_page')}}">Acceuil</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('propos')}}">A propos</a>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        {% for message in get_flashed_messages() %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% block content %} {% endblock %}
+    </div>
+    <form id ='image_form' action = "{{url_for('hv_page')}}" method="post">
+        <label for="file">Select file</label>
+        <select id="file" name="file" onchange="document.getElementById('image_form').submit();" class="form-select form-select-sm" aria-label=".form-select-sm example">
+          {% for option in files %}
+                {% if option == savedFileOpt %}
+                    <option value= {{option}} selected >{{option}} </option>
+                {% else %}
+                    <option value= {{option}} >{{option}} </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <label for="tempMean">Select tempMean</label>
+        <select id="tempMean" name = "tempMean" onchange="document.getElementById('image_form').submit();" class="form-select form-select-sm" aria-label=".form-select-sm example">
+            {% for option in tempMeanOpt %}
+                {% if option == savedTmOpt %}
+                    <option value= {{option}} selected >{{option}}d </option>
+                {% else %}
+                    <option value= {{option}} >{{option}}d </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <label for="version">Select version</label>
+        <select id="version" name = "version" onchange="document.getElementById('image_form').submit();" class="form-select form-select-sm" aria-label=".form-select-sm example">
+            {% for option in versionOpt %}
+                {% if option == savedVersionOpt %}
+                    <option value= {{option}} selected >{{option}} </option>
+                {% else %}
+                    <option value= {{option}} >{{option}} </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <br>
+        <label for="exempleSlider" class="form-label">Select resolution (in degre)</label>
+        <input name="resSlider" type="range" value={{sliderValue}} min="0.1" max="6" step="0.1" oninput="this.nextElementSibling.value = this.value" id="resSlider">
+        <output>{{sliderValue}}</output>
+        <button type="submit" class="btn btn-primary">Change resolution</button>
+    </form>
+
+    {{ script|safe }}
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <!--script>
+        var form = document.getElementById("image_form");
+        document.getElementByClassName("form-select form-select-sm").addEventListener("change", function () {
+          form.submit();
+        });
+    </script-->
+  </body>
+</html>
